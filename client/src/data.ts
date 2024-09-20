@@ -32,11 +32,17 @@ function writeData(data: Data): void {
 }
 
 export async function readEntries(): Promise<Entry[]> {
-  return readData().entries;
+  const response = await fetch('/api/entries');
+  if (!response.ok) throw new Error(`Error: ${response.status}`);
+  const entries = await response.json();
+  return entries;
 }
 
 export async function readEntry(entryId: number): Promise<Entry | undefined> {
-  return readData().entries.find((e) => e.entryId === entryId);
+  const response = await fetch(`/api/entries/${entryId}`);
+  if (!response.ok) throw new Error(`Error: ${response.status}`);
+  const entry = await response.json();
+  return entry;
 }
 
 export async function addEntry(entry: Entry): Promise<Entry> {
