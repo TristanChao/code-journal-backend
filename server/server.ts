@@ -64,6 +64,35 @@ app.post('/api/entries', async (req, res, next) => {
   }
 });
 
+app.put('/api/entries/:entryId', async (req, res, next) => {
+  try {
+    const { entryId } = req.params;
+    const { title, notes, photoUrl } = req.body;
+    if (!Number.isInteger(+entryId)) {
+      throw new ClientError(400, 'entryId must be an integer');
+    }
+    if (title === undefined || notes === undefined || photoUrl === undefined) {
+      throw new ClientError(400, 'title, notes, and photoUrl are required');
+    }
+
+    const sql = `
+      update "entries"
+      set "title" = $1,
+          "notes" = $2,
+          "photoUrl" = $3
+      where "entryId" = $4
+      returning *;
+    `;
+    const params = [title, notes, photoUrl, entryId];
+    const result = await db.query(sql, params);
+    const update = result.rows[0];
+    if (!update) throw new ClientError(404, `entry ${entryId} not found`);
+    res.json(update);
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.delete('/api/entries/:entryId', async (req, res, next) => {
   try {
     const { entryId } = req.params;
