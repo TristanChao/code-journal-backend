@@ -46,6 +46,42 @@ app.get('/api/entries/:entryId', async (req, res, next) => {
   }
 });
 
+app.post('/api/entries', async (req, res, next) => {
+  try {
+    const { title, notes, photoUrl } = req.body;
+    const sql = `
+    insert into "entries" ("title", "notes", "photoUrl")
+    values ($1, $2, $3)
+    returning *;
+    `;
+    const params = [title, notes, photoUrl];
+    const results = await db.query(sql, params);
+    const create = results.rows[0];
+    if (!create) throw new ClientError(404, `Could not create entry`);
+    res.json(create);
+  } catch (err) {
+    next(err);
+  }
+});
+
+app.delete('/api/entries/:entryId', async (req, res, next) => {
+  try {
+    const { entryId } = req.params;
+    const sql = `
+    delete
+    from "entries"
+    where "entryId" = $1
+    returning *
+    `;
+    const results = await db.query(sql, [entryId]);
+    const erase = results.rows[0];
+    if (!erase) throw new ClientError(404, `Could not delete entry`);
+    res.json(erase);
+  } catch (err) {
+    next(err);
+  }
+});
+
 app.use(errorMiddleware);
 
 app.listen(process.env.PORT, () => {

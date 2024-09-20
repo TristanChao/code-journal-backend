@@ -46,13 +46,13 @@ export async function readEntry(entryId: number): Promise<Entry | undefined> {
 }
 
 export async function addEntry(entry: Entry): Promise<Entry> {
-  const data = readData();
-  const newEntry = {
-    ...entry,
-    entryId: data.nextEntryId++,
-  };
-  data.entries.unshift(newEntry);
-  writeData(data);
+  const response = await fetch('/api/entries', {
+    method: 'POST',
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify(entry),
+  });
+  if (!response.ok) throw new Error(`Error: ${response.status}`);
+  const newEntry = await response.json();
   return newEntry;
 }
 
@@ -67,10 +67,8 @@ export async function updateEntry(entry: Entry): Promise<Entry> {
 }
 
 export async function removeEntry(entryId: number): Promise<void> {
-  const data = readData();
-  const updatedArray = data.entries.filter(
-    (entry) => entry.entryId !== entryId
-  );
-  data.entries = updatedArray;
-  writeData(data);
+  const response = await fetch(`/api/entries/${entryId}`, {
+    method: 'DELETE',
+  });
+  if (!response.ok) throw new Error(`Error: ${response.status}`);
 }
